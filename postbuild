@@ -131,8 +131,8 @@ const injectHash = replaceFunc(`<!-- ${revision} -->`)
 const regex = new RegExp(`(<!\\-\\- remove:${removeCondition} \\-\\->)([\\s\\S]*?)(<!\\-\\- endremove \\-\\->)`, 'gm');
 
 fs.createReadStream(program.input)
-.pipe(replaceStream(/(<!\-\- inject:js \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, replaceJs))
-.pipe(replaceStream(/(<!\-\- inject:css \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, replaceCss))
+.pipe(replaceStream(/(<!\-\- inject:js \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:js -->\n${replaceJs()}\n<!-- endinject -->`))
+.pipe(replaceStream(/(<!\-\- inject:css \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:css -->\n${replaceCss()}\n<!-- endinject -->`))
 .pipe(replaceStream(/(<!\-\- inject:git\-hash \-\->)/gm, injectHash))
 .pipe(replaceStream(regex, ''))
 .pipe(fs.createWriteStream(program.output, { flags: 'r+' }));
