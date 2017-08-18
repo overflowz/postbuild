@@ -169,7 +169,7 @@ const regex = new RegExp(`(<!\\-\\- remove:${removeCondition} \\-\\->)([\\s\\S]*
 fs.createReadStream(program.input)
   .pipe(replaceStream(/(<!\-\- inject:js \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:js -->\n${jsFiles ? replaceJs() : ''}\n<!-- endinject -->`))
   .pipe(replaceStream(/(<!\-\- inject:css \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:css -->\n${cssFiles ? replaceCss() : ''}\n<!-- endinject -->`))
-  .pipe(replaceStream(/(\/\/ inject:scss)([\s\S]*?)(\/\/ endinject)/gm, `// inject:scss\n${scssFiles ? replaceScss() : ''}\n//endinject`))
+  .pipe(replaceStream(/(\/\/ inject:scss)([\s\S]*?)(\/\/ endinject)/gm, `// inject:scss\n${scssFiles ? replaceScss() : ''}\n// endinject`))
   .pipe(replaceStream(/(<!\-\- inject:git\-hash \-\->)/gm, injectHash))
   .pipe(replaceStream(regex, ''))
   .pipe(fs.createWriteStream(program.output, { flags: 'r+' }));
