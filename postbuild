@@ -6,7 +6,6 @@ const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
-const replaceStream = require('replacestream');
 const program = require('commander');
 
 let cssFiles;
@@ -166,10 +165,36 @@ const replaceScss = replaceFunc(scssFiles);
 const injectHash = replaceFunc(`<!-- ${revision} -->`)
 const regex = new RegExp(`(<!\\-\\- remove:${removeCondition} \\-\\->)([\\s\\S]*?)(<!\\-\\- endremove \\-\\->)`, 'gm');
 
-fs.createReadStream(program.input)
-  .pipe(replaceStream(/(<!\-\- inject:js \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:js -->\n${jsFiles ? replaceJs() : ''}\n<!-- endinject -->`))
-  .pipe(replaceStream(/(<!\-\- inject:css \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:css -->\n${cssFiles ? replaceCss() : ''}\n<!-- endinject -->`))
-  .pipe(replaceStream(/(\/\/ inject:scss)([\s\S]*?)(\/\/ endinject)/gm, `// inject:scss\n${scssFiles ? replaceScss() : ''}\n// endinject`))
-  .pipe(replaceStream(/(<!\-\- inject:git\-hash \-\->)/gm, injectHash))
-  .pipe(replaceStream(regex, ''))
-  .pipe(fs.createWriteStream(program.output, { flags: 'r+' }));
+fs.readFile(program.input, 'utf-8', (err, data) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+
+  if (program.js) {
+    data = data.replace(/(<!\-\- inject:js \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:js -->\n${jsFiles ? replaceJs() : ''}\n<!-- endinject -->`);
+  }
+
+  if (program.css) {
+    data = data.replace(/(<!\-\- inject:css \-\->)([\s\S]*?)(<!\-\- endinject \-\->)/gm, `<!-- inject:css -->\n${cssFiles ? replaceCss() : ''}\n<!-- endinject -->`);
+  }
+
+  if (program.scss) {
+    data = data.replace(/(\/\/ inject:scss)([\s\S]*?)(\/\/ endinject)/gm, `// inject:scss\n${scssFiles ? replaceScss() : ''}\n// endinject`);
+  }
+
+  if (program.hash) {
+    data = data.replace(/(<!\-\- inject:git\-hash \-\->)/gm, injectHash);
+  }
+
+  if (program.remove) {
+    data = data.replace(regex, '');
+  }
+
+  fs.writeFile(program.output, data, { encoding: 'utf-8', flag: 'w' }, (err) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+});
